@@ -208,22 +208,28 @@ function closeModal() {
 }
 
 /* 안내사항 */
+/* 공지사항 */
 async function fetchNotices() {
-    const container = document.getElementById('notice-list-container');
+    const container = document.getElementById("notice-list-container");
+
     try {
-        const response = await fetch('./assets/files/notices.json');
-        if (!response.ok) throw new Error('데이터 없음');
+        const response = await fetch("./assets/files/notices.json");
+        if (!response.ok) throw new Error();
+
         const data = await response.json();
 
         container.innerHTML = data.map(item => `
             <div class="notice-item">
-                <div class="notice-header" onclick="this.parentElement.classList.toggle('active')">
+                <div class="notice-header">
                     <div class="notice-title-group">
-                        <span class="notice-badge ${item.important ? 'important' : ''}">${item.tag}</span>
+                        <span class="notice-badge ${item.important ? 'important' : ''}">
+                            ${item.tag}
+                        </span>
                         <span class="notice-title">${item.title}</span>
                     </div>
-                    
-                    <span class="notice-date"><span class="notice-hint">클릭하여 펼치기</span>&emsp;${item.date}</span>
+                    <span class="notice-date">
+                        <span class="notice-hint">클릭하여 펼치기</span>&emsp;${item.date}
+                    </span>
                 </div>
                 <div class="notice-content">
                     <div class="notice-text">${item.content}</div>
@@ -236,10 +242,24 @@ async function fetchNotices() {
                     ` : ''}
                 </div>
             </div>
-        `).join('');
+        `).join("");
 
-    } catch (error) {
-        container.innerHTML = '<p style="text-align:center;">현재 등록된 공지사항이 없습니다.</p>';
+        document.querySelectorAll(".notice-header").forEach(header => {
+            header.addEventListener("click", () => {
+                const item = header.parentElement;
+                const hint = header.querySelector(".notice-hint");
+
+                const isOpen = item.classList.toggle("active");
+                if (hint) {
+                    hint.textContent = isOpen
+                        ? "클릭하여 접기"
+                        : "클릭하여 펼치기";
+                }
+            });
+        });
+
+    } catch {
+        container.innerHTML = "<p style='text-align:center;'>공지사항이 없습니다.</p>";
     }
 }
 
