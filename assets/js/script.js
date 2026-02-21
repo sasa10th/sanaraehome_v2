@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeroParallax();
     initScrollReveal();
     initDetailsAnimation();
+    initMobileSwipe();
 });
 
 /* 타이핑 애니메이션 */
@@ -265,3 +266,99 @@ async function fetchNotices() {
 
 // 페이지 로드 시 실행
 window.addEventListener('DOMContentLoaded', fetchNotices);
+
+/* 모바일 좌우 스와이프로 섹션 이동 */
+function initMobileSwipe() {
+    // 터치 스크린이면서 모바일 화면 크기일 때만 활성화
+    if (!window.matchMedia('(pointer: coarse) and (max-width: 768px)').matches) return;
+
+    const sections = Array.from(document.querySelectorAll('section, footer'));
+    const header = document.querySelector('header');
+    const SWIPE_THRESHOLD = 60;  // 스와이프 최소 거리 (px)
+    const ANGLE_LIMIT = 0.6;     // dy/dx 비율 한계
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isNavigating = false;
+
+    // 현재 화면 중앙에 가장 가까운 섹션 인덱스 반환
+    function getCurrentSectionIndex() {
+        const midY = window.scrollY + window.innerHeight / 2;
+        let closest = 0;
+        let minDist = Infinity;
+        sections.forEach((sec, i) => {
+            const secMid = sec.offsetTop + sec.offsetHeight / 2;
+            const dist = Math.abs(midY - secMid);
+            if (dist < minDist) { minDist = dist; closest = i; }
+        });
+        return closest;
+    }
+
+    function scrollToSection(index) {
+        if (index < 0 || index >= sections.length) return;
+        const headerHeight = header ? header.offsetHeight : 0;
+        const top = sections[index].getBoundingClientRect().top + window.scrollY - headerHeight - 20;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        if (isNavigating) return;
+
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (absDx < SWIPE_THRESHOLD) return;       // 너무 짧은 스와이프 무시
+        if (absDy / absDx > ANGLE_LIMIT) return;  // 세로 방향에 가까우면 무시
+
+        isNavigating = true;
+        const current = getCurrentSectionIndex();
+
+        if (dx < 0) {
+            scrollToSection(current + 1);  // 왼쪽 스와이프 → 다음 섹션
+        } else {
+            scrollToSection(current - 1);  // 오른쪽 스와이프 → 이전 섹션
+        }
+
+        setTimeout(() => { isNavigating = false; }, 700);
+    }, { passive: true });
+
+    showSwipeHint();
+}
+
+function showSwipeHint() {
+    if (sessionStorage.getItem('swipeHintShown')) return;
+    sessionStorage.setItem('swipeHintShown', '1');
+
+    const hint = document.createElement('div');
+    hint.id = 'swipe-hint';
+    hint.innerHTML = `<span>← 스와이프로 섹션 이동 →</span>`;
+    hint.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(1, 59, 132, 0.85);
+        color: #fff;
+        padding: 10px 22px;
+        border-radius: 30px;
+        font-size: 14px;
+        z-index: 9999;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        white-space: nowrap;
+    `;
+    document.body.appendChild(hint);
+
+    // 잠깐 기다렸다가 표시 후 사라짐
+    setTimeout(() => { hint.style.opacity = '1'; }, 500);
+    setTimeout(() => { hint.style.opacity = '0'; }, 3000);
+    setTimeout(() => { hint.remove(); }, 3500);
+}
