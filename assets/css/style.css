@@ -38,6 +38,7 @@ body {
 
 section {
     padding: 10px 0;
+    min-height: 50vh;
 }
 
 a {
@@ -713,3 +714,4 @@ footer {
         min-width: unset;
     }
 }
+
