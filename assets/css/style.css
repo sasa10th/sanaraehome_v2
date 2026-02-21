@@ -177,7 +177,13 @@ header .logo img {
     background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0) 100%), url(../img/hero-bg.png);
     background-size: cover;
     background-position: center calc(50% - 10vh);
-    animation: movement 15s ease infinite;
+}
+
+@media (max-aspect-ratio: 3/2) {
+    .home-section {
+        background-size: auto 100vh; 
+        animation: movement 15s ease infinite;
+    }
 }
 
 @keyframes movement {
@@ -692,5 +698,18 @@ footer {
 @media (max-width: 600px) {
     .card {
         flex: 0 0 80%;
+    }
+
+    .card-container {
+        flex-direction: column;
+        overflow-x: visible;
+        overflow-y: visible;
+        scroll-snap-type: none;
+    }
+
+    .card {
+        flex: 0 0 auto;
+        width: 100%;
+        min-width: unset;
     }
 }
